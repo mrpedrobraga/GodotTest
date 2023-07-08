@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://b7orcxmk2w34j"]
+
+[ext_resource type="BoxMesh" uid="uid://cj5vidrf2fhc" path="res://my_box.tres" id="1_hi76j"]
+[ext_resource type="BoxMesh" uid="uid://ctd3td2q16ehe" path="res://my_box2.tres" id="2_aeuwt"]
+
+[sub_resource type="GDScript" id="GDScript_smg3s"]
+script/source = "extends Node2D
+
+@export var res_1 : Resource
+@export var res_2 : Resource
+
+func _process(delta):
+	if Input.is_action_just_pressed(\"ui_accept\"):
+		var path = res_1.resource_path
+		res_2.take_over_path(res_1.resource_path)
+		$MeshInstance2D.mesh = load(path)
+"
+
+[node name="Node2D" type="Node2D"]
+script = SubResource("GDScript_smg3s")
+res_1 = ExtResource("1_hi76j")
+res_2 = ExtResource("2_aeuwt")
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="."]
+position = Vector2(356, 148)
+scale = Vector2(100, 100)
+mesh = ExtResource("1_hi76j")

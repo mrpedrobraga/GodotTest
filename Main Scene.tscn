@@ -1,0 +1,46 @@
+[gd_scene load_steps=7 format=3 uid="uid://djmufjwh4yici"]
+
+[ext_resource type="BoxMesh" uid="uid://cj5vidrf2fhc" path="res://my_box.tres" id="1_vuwdf"]
+[ext_resource type="Script" path="res://addons/model_hot_reload/ModelReloader.gd" id="2_cci3h"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_hue34"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_x2lln"]
+sky_material = SubResource("ProceduralSkyMaterial_hue34")
+
+[sub_resource type="Environment" id="Environment_1ycfm"]
+background_mode = 2
+sky = SubResource("Sky_x2lln")
+tonemap_mode = 2
+
+[sub_resource type="GDScript" id="GDScript_5kli1"]
+script/source = "extends MeshInstance3D
+
+func _process(delta):
+	if Input.is_action_just_pressed(\"ui_accept\"):
+		mesh = load('res://my_box.tres')
+"
+
+[node name="Main Scene" type="Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1ycfm")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = ExtResource("1_vuwdf")
+
+[node name="ModelReloader3D" type="Node" parent="MeshInstance3D"]
+script = ExtResource("2_cci3h")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.21242, 2.71251, -5.38424)
+script = SubResource("GDScript_5kli1")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.908282, 0, 0.418359, 0, 1, 0, -0.418359, 0, 0.908282, 2.60796, 0, 4.52141)
