@@ -32,14 +32,16 @@ shadow_enabled = true
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1ycfm")
 
+[node name="ModelReloader3D" type="Node" parent="." node_paths=PackedStringArray("target_nodes")]
+script = ExtResource("2_cci3h")
+target_nodes = [NodePath("../MeshInstance3D"), NodePath("../MeshInstance3D2")]
+
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = ExtResource("1_vuwdf")
 
-[node name="ModelReloader3D" type="Node" parent="MeshInstance3D"]
-script = ExtResource("2_cci3h")
-
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.21242, 2.71251, -5.38424)
+mesh = ExtResource("1_vuwdf")
 script = SubResource("GDScript_5kli1")
 
 [node name="Camera3D" type="Camera3D" parent="."]

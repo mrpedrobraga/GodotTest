@@ -12,9 +12,11 @@ class_name ModelReloader3D
 
 ## Whether this ModelReloader3D will reload by itself.
 @export var auto_reload : bool = true
-## The target nodes to watch out for!
+## The resource to watch for!
+@export var resource : Resource
+## The target nodes to replace the resource in!
 @export var target_nodes : Array[Node3D]
-## The target property to swap.
+## The target property in the nodes that the Resource is stored in!
 @export var target_property : StringName = &"mesh"
 
 signal resource_changed_on_disk
@@ -37,6 +39,9 @@ func reload() -> void:
 		}))
 		return
 
+	# Some resource types may require custom loading.
+	_reload_and_replace(resource)
+
 	for node in target_nodes:
 		print('Reloading: ' + node.name)
 		var current_resource = node.get(target_property)
@@ -47,7 +52,7 @@ func reload() -> void:
 				"prop_name": target_property
 			}))
 			return
-		print(current_resource)
+		
 		if !current_resource is Resource:
 			push_error('The current value of {prop_name} is not of type Resource.'.format({
 				"name": name,
@@ -55,20 +60,19 @@ func reload() -> void:
 			}))
 			return
 		
-		_replace_with_new_resource(node, target_property, current_resource)
+		node.set(target_property, resource)
 		
 				
 ## Completely reloads a resource and swaps it on the target node only.
 ## It does not update the resource's data, so if another node uses this resource,
 ## it will not update there...[br][br]
 ## New `load` calls will reload the resource properly.
-func _replace_with_new_resource(node : Node3D, property : StringName, old_resource : Resource) -> void:
+func _reload_and_replace(old_resource : Resource) -> void:
 	var path = old_resource.resource_path
 	# TODO: Remove this test.
 	path = 'res://my_box2.tres'
 	var new_resource = _load(path)
 	new_resource.take_over_path(old_resource.resource_path)
-	node.set(property, new_resource)
 
 ## Loads a resource from disk, with specific requirements.
 func _load(path : String) -> Resource:
