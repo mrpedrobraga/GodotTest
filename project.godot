@@ -14,9 +14,19 @@ config/name="GodotTest"
 run/main_scene="res://Main Scene.tscn"
 config/features=PackedStringArray("4.1", "GL Compatibility")
 
+[display]
+
+window/size/viewport_width=128
+window/size/viewport_height=128
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/model_hot_reload/plugin.cfg", "res://addons/plugin_refresher/plugin.cfg")
+
+[editor_tools]
+
+hot_reload/enabled=true
+hot_reload/rate_limiter_cooldown=1.0
 
 [rendering]
 
