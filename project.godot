@@ -18,6 +18,7 @@ config/features=PackedStringArray("4.1", "GL Compatibility")
 
 window/size/viewport_width=128
 window/size/viewport_height=128
+window/stretch/mode="viewport"
 
 [editor_plugins]
 

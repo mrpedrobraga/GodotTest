@@ -19,7 +19,15 @@ signal resource_reloaded
 @export_category('Hot Reload')
 
 ## Whether this ModelReloader3D will reload by itself.
-@export var auto_reload : bool = true
+@export var auto_reload : bool = true:
+	set(v):
+		auto_reload = v
+
+		if v:
+			if resource and not Engine.is_editor_hint():
+				start_watching(_get_watched_path())
+		else:
+			stop_watching()
 ## The resource to watch for!
 @export var resource : Resource:
 	set(v):
@@ -30,13 +38,13 @@ signal resource_reloaded
 ## The target nodes to replace the resource in!
 @export var target_nodes : Array[Node]
 ## The target property in the nodes that the Resource is stored in!
-@export var target_property : StringName = &"mesh"
+@export var target_property : String = "mesh"
 
 @export_category('Modifiers')
 ## If instead of updating target nodes, scan through ALL scene tree nodes and update the references to the resource.
 @export var reload_whole_scene_tree : bool = false
 ## In case [member reload_whole_scene_tree] is true, the possible variable names this [ResourceReloader] will try to update.
-@export var possible_property_names : Array[StringName]
+@export var possible_property_names : Array[String]
 
 
 @export_group('Overrides')
@@ -62,37 +70,37 @@ func _ready() -> void:
 	if !target_nodes or target_nodes.size() < 1:
 		target_nodes = [get_parent()]
 	
-	resource = target_nodes[0].get(target_property)
+	resource = target_nodes[0].get_indexed(target_property)
 	
 	if not resource or not resource is Resource:
-		push_warning('No resource set for ' + str(target_nodes[0]) + '.' + target_property + '!')
+		push_warning('No resource set for ' + str(target_nodes[0]) + '.' + str(target_property) + '!')
 		return
 
 	start_watching(
 		_get_watched_path()
 	)
 
+func _print(m,n="",o="",p="",q=""):
+	#print(m,n,o,p,q)
+	pass
 
-func _test():
-	reload()
-
-func _get_watched_path():
+func _get_watched_path() -> String:
 	if reload_path_override:
 		return reload_path_override
 	return _reload_path
 
 ## Set the file this [ResourceReloader] will be watching for changes.
-func set_resource_file(file : String):
+func set_resource_file(file : String) -> void:
 	reload_path_override = file.simplify_path()
 	start_watching(file)
 	reload()
 
 ## Start watching for the file events in the directory.
-func start_watching(file : String):
-	print('Watching ', file, ' for hot reload.')
+func start_watching(file : String) -> void:
+	_print('[DEBUG] Watching ', file, ' for hot reload.')
 
-	if _dir_watcher:
-		_dir_watcher.queue_free()
+	stop_watching()
+
 	_dir_watcher = DirectoryWatcher.new()
 	_dir_watcher.add_scan_directory(file.get_base_dir())
 
@@ -101,27 +109,30 @@ func start_watching(file : String):
 	_dir_watcher.files_created.connect(_dir_watcher_any_file_modified)
 	_dir_watcher.files_deleted.connect(_dir_watcher_any_file_modified)
 
-func _dir_watcher_any_file_modified(files : Array):
+func stop_watching():
+	if _dir_watcher:
+		_dir_watcher.queue_free()
+
+func _dir_watcher_any_file_modified(files : Array) -> void:
 	var watched_path = _get_watched_path()
-	print(watched_path, ' ', files)
 
 	if !watched_path:
 		push_warning('Resource can\'t be hot reloaded as its not saved on disk.')
 
 	for file in files:
 		if file == watched_path:
-			print('Resource modified: ', file, '. Reloading!')
+			_print('[DEBUG] Resource modified: ', file, '. Reloading!')
 			resource_changed_on_disk.emit()
 			reload()
 
-func _dir_watcher_any_file_created(files : Array):
+func _dir_watcher_any_file_created(files : Array) -> void:
 	var watched_path = _get_watched_path()
 	for file in files:
 		if file == watched_path:
 			resource_changed_on_disk.emit()
 			reload()
 
-func _dir_watcher_any_file_deleted(files : Array):
+func _dir_watcher_any_file_deleted(files : Array) -> void:
 	var watched_path = _get_watched_path()
 	for file in files:
 		if file == watched_path:
@@ -141,11 +152,14 @@ func reload() -> void:
 		}))
 		return
 
-	# Some resource types may require custom loading.
+	if not resource:
+		push_warning('No resource to compare.')
+		return
+
 	var new_resource = _reload_and_replace(resource)
 
 	if reload_whole_scene_tree:
-		apply_change_on_whole_scene_tree(resource, new_resource, possible_property_names)
+		apply_change_on_whole_scene_tree(resource, new_resource, possible_property_names.map(func(x): return NodePath(x)))
 	else:
 		for node in target_nodes:
 			apply_change_on_node(node, new_resource)
@@ -154,16 +168,19 @@ func reload() -> void:
 	## TODO: Decide whether to have special cooldowns or not.
 	#cool_down(ProjectSettings.get_setting(&'editor_tools/hot_reload/rate_limiter_cooldown') or 1.0)
 	
-	resource = new_resource
-	resource_reloaded.emit()
+	if new_resource:
+		resource = new_resource
+		resource_reloaded.emit()
+	else:
+		push_warning('Loaded resource was null: ', _get_watched_path())
 
 ## Reloads the resource for a specific node.
-func apply_change_on_node(node : Node, resource : Resource):
-	print('Reloading ' + node.to_string() + '\'s ' + target_property + '!')
+func apply_change_on_node(node : Node, resource : Resource) -> void:
+	_print('[DEBUG] Reloading ' + node.to_string() + '\'s ' + str(target_property) + '!')
 	
 	# ! Remove this code if unneeded at all;
 	if PERFORM_SAFETY_CHECKS:
-		var current_resource = node.get(target_property)
+		var current_resource = node.get_indexed(target_property)
 
 		if !current_resource:
 			push_error('{name}.{target_property} is null or does not exist'.format({
@@ -179,19 +196,22 @@ func apply_change_on_node(node : Node, resource : Resource):
 			}))
 			return
 	
-	node[target_property] = resource
+	_set_node_property(node, target_property, resource)
+
+func _set_node_property(node : Object, target_property : NodePath, value) -> void:
+	node.set_indexed(target_property, value)
 
 ## Reloads the resource for the whole scene tree, if possible.
-func try_apply_change_on_node(node : Node, old_resource : Resource, new_resource : Resource, possible_prop_names : Array[StringName]):
+func try_apply_change_on_node(node : Node, old_resource : Resource, new_resource : Resource, possible_prop_names : Array[NodePath]) -> void:
 	for prop_name in possible_prop_names:
-		if node.get(prop_name) == old_resource:
-			node.set_deferred(prop_name, new_resource)
+		if node.get_indexed(prop_name) == old_resource:
+			_set_node_property(node, prop_name, new_resource)
 
 ## Reloads the resource for the whole scene tree.
-func apply_change_on_whole_scene_tree(old_resource : Resource, new_resource : Resource, possible_prop_names : Array[StringName]):
+func apply_change_on_whole_scene_tree(old_resource : Resource, new_resource : Resource, possible_prop_names : Array[NodePath]) -> void:
 	_apply_change_recursive(get_tree().root, old_resource, new_resource, possible_prop_names)
 
-func _apply_change_recursive(node : Node, old_resource : Resource, new_resource : Resource, possible_prop_names : Array[StringName]):
+func _apply_change_recursive(node : Node, old_resource : Resource, new_resource : Resource, possible_prop_names : Array[NodePath]) -> void:
 	try_apply_change_on_node(node, old_resource, new_resource, possible_prop_names)
 
 	for child in node.get_children():
@@ -214,7 +234,6 @@ func _reload_and_replace(old_resource : Resource) -> Resource:
 	var new_resource = _load(path)
 	new_resource.take_over_path(old_resource.resource_path)
 	_reload_path = new_resource.resource_path
-	print('new path:', _reload_path)
 	return new_resource
 
 ## Loads a resource from disk, with specific requirements.
@@ -224,12 +243,10 @@ func _load(path : String) -> Resource:
 	return ResourceLoader.load(path, "", 0)
 
 ## Avoid reloading resources for an amount of time.
-func cool_down(amount : float):
+func cool_down(amount : float) -> void:
 	_cooling_down = true
-	print('Cooling down.')
 	await get_tree().create_timer(amount).timeout
 	_cooling_down = false
-	print('Cool down finished.')
 
 	## If reload was called at any point while cooling down,
 	## reload.

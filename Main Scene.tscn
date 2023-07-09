@@ -1,8 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://b7lgv1apqon32"]
 
+[ext_resource type="Texture2D" uid="uid://ct2je4gcajptm" path="res://dummy_img.tres" id="1_avpwl"]
 [ext_resource type="Script" path="res://addons/resource_hot_reload/reloaders/ImageReloader.gd" id="1_t423n"]
-
-[sub_resource type="ImageTexture" id="ImageTexture_j57hg"]
 
 [sub_resource type="GDScript" id="GDScript_4kfwx"]
 script/source = "extends Sprite2D
@@ -10,21 +9,20 @@ script/source = "extends Sprite2D
 func _process(delta):
 	if Input.is_action_just_pressed(\"ui_accept\"):
 		var path = \"C:\\\\Users\\\\carlo\\\\OneDrive\\\\Imagens\\\\MyPng.png\"
-		
+
 		$ImageReloader.set_resource_file(path)
+		pass
 "
 
 [node name="Node2D" type="Node2D"]
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(56, 53)
-texture = SubResource("ImageTexture_j57hg")
+texture = ExtResource("1_avpwl")
 script = SubResource("GDScript_4kfwx")
 
 [node name="ImageReloader" type="Node" parent="Sprite2D" node_paths=PackedStringArray("target_nodes")]
 script = ExtResource("1_t423n")
-resource = SubResource("ImageTexture_j57hg")
+resource = ExtResource("1_avpwl")
 target_nodes = [NodePath("..")]
-target_property = &"texture"
-reload_whole_scene_tree = true
-possible_property_names = Array[StringName]([&"texture"])
+target_property = "texture"
