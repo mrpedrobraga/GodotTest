@@ -10,7 +10,7 @@ func _enter_tree():
 	add_custom_type(
 		'ResourceReloader',
 		'Node',
-		preload("res://addons/model_hot_reload/ModelReloader.gd"),
+		preload("res://addons/resource_hot_reload/ResourceReloader.gd"),
 		get_editor_interface().get_base_control().get_theme_icon('Reload', 'EditorIcons')
 	)
 	

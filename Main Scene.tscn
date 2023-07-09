@@ -1,50 +1,30 @@
-[gd_scene load_steps=7 format=3 uid="uid://djmufjwh4yici"]
+[gd_scene load_steps=4 format=3 uid="uid://b7lgv1apqon32"]
 
-[ext_resource type="BoxMesh" uid="uid://cj5vidrf2fhc" path="res://my_box.tres" id="1_vuwdf"]
-[ext_resource type="Script" path="res://addons/model_hot_reload/ModelReloader.gd" id="2_cci3h"]
+[ext_resource type="Script" path="res://addons/resource_hot_reload/reloaders/ImageReloader.gd" id="1_t423n"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_hue34"]
-sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+[sub_resource type="ImageTexture" id="ImageTexture_j57hg"]
 
-[sub_resource type="Sky" id="Sky_x2lln"]
-sky_material = SubResource("ProceduralSkyMaterial_hue34")
-
-[sub_resource type="Environment" id="Environment_1ycfm"]
-background_mode = 2
-sky = SubResource("Sky_x2lln")
-tonemap_mode = 2
-
-[sub_resource type="GDScript" id="GDScript_5kli1"]
-script/source = "extends MeshInstance3D
+[sub_resource type="GDScript" id="GDScript_4kfwx"]
+script/source = "extends Sprite2D
 
 func _process(delta):
 	if Input.is_action_just_pressed(\"ui_accept\"):
-		mesh = load('res://my_box.tres')
-		print('Reloading same resource.')
+		var path = \"C:\\\\Users\\\\carlo\\\\OneDrive\\\\Imagens\\\\MyPng.png\"
+		
+		$ImageReloader.set_resource_file(path)
 "
 
-[node name="Main Scene" type="Node3D"]
+[node name="Node2D" type="Node2D"]
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
-shadow_enabled = true
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(56, 53)
+texture = SubResource("ImageTexture_j57hg")
+script = SubResource("GDScript_4kfwx")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_1ycfm")
-
-[node name="ModelReloader3D" type="Node" parent="." node_paths=PackedStringArray("target_nodes")]
-script = ExtResource("2_cci3h")
-resource = ExtResource("1_vuwdf")
-target_nodes = [NodePath("../MeshInstance3D"), NodePath("../MeshInstance3D2")]
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = ExtResource("1_vuwdf")
-
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.21242, 2.71251, -5.38424)
-mesh = ExtResource("1_vuwdf")
-script = SubResource("GDScript_5kli1")
-
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.908282, 0, 0.418359, 0, 1, 0, -0.418359, 0, 0.908282, 2.60796, 0, 4.52141)
+[node name="ImageReloader" type="Node" parent="Sprite2D" node_paths=PackedStringArray("target_nodes")]
+script = ExtResource("1_t423n")
+resource = SubResource("ImageTexture_j57hg")
+target_nodes = [NodePath("..")]
+target_property = &"texture"
+reload_whole_scene_tree = true
+possible_property_names = Array[StringName]([&"texture"])
